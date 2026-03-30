@@ -1,0 +1,79 @@
+{
+  "name": "claude-code-rtl-fix",
+  "displayName": "Claude Code RTL Fix",
+  "description": "Enables right-to-left text rendering in Claude Code for Hebrew, Arabic, Farsi, Urdu, and other RTL languages. Smart direction detection without affecting LTR text.",
+  "version": "1.0.0",
+  "publisher": "yaniv-naor",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "rtl",
+    "bidi",
+    "hebrew",
+    "arabic",
+    "farsi",
+    "persian",
+    "urdu",
+    "right-to-left",
+    "claude",
+    "claude-code",
+    "anthropic"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "claude-code-hebrew-bidi.enable",
+        "title": "Enable RTL Text Fix",
+        "category": "Claude Code"
+      },
+      {
+        "command": "claude-code-hebrew-bidi.disable",
+        "title": "Disable RTL Text Fix",
+        "category": "Claude Code"
+      },
+      {
+        "command": "claude-code-hebrew-bidi.status",
+        "title": "Check RTL Text Fix Status",
+        "category": "Claude Code"
+      },
+      {
+        "command": "claude-code-hebrew-bidi.toggle",
+        "title": "Toggle RTL Text Fix",
+        "category": "Claude Code"
+      }
+    ],
+    "configuration": {
+      "title": "Claude Code RTL Fix",
+      "properties": {
+        "claude-code-hebrew-bidi.autoEnable": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically enable RTL text fix on VS Code startup"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "lint": "echo 'No linting configured'",
+    "test": "node test.js"
+  },
+  "devDependencies": {},
+  "dependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yaniv-naor/claude-code-rtl-fix"
+  },
+  "bugs": {
+    "url": "https://github.com/yaniv-naor/claude-code-rtl-fix/issues"
+  },
+  "license": "MIT",
+  "icon": "icon.png"
+}
