@@ -8,20 +8,30 @@
     "vscode": "^1.80.0"
   },
   "categories": [
-    "Other"
+    "Other",
+    "Formatters"
   ],
   "keywords": [
+    "claude",
+    "claude-code",
+    "claude code",
+    "anthropic",
     "rtl",
+    "right-to-left",
     "bidi",
+    "bidirectional",
     "hebrew",
     "arabic",
     "farsi",
     "persian",
     "urdu",
-    "right-to-left",
-    "claude",
-    "claude-code",
-    "anthropic"
+    "text-direction",
+    "i18n",
+    "internationalization",
+    "עברית",
+    "العربية",
+    "ai assistant",
+    "chat"
   ],
   "activationEvents": [
     "onStartupFinished"
