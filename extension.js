@@ -4,14 +4,14 @@ const path = require('path');
 const os = require('os');
 
 const BACKUP_SUFFIX = '.bidi-backup';
-const PATCH_MARKER = '/* HEBREW_BIDI_FIX */';
+const PATCH_MARKER = '/* RTL_BIDI_FIX */';
 
 // Status bar item
 let statusBarItem;
 
 // JavaScript snippet injected at the end of index.js
 const BIDI_JS_PATCH = `
-/* HEBREW_BIDI_FIX */
+/* RTL_BIDI_FIX */
 ;(function(){
   var SELECTORS = [
     '[class*="message_"]',
@@ -43,7 +43,7 @@ const BIDI_JS_PATCH = `
   var observer = new MutationObserver(applyBidi);
   observer.observe(document.body, { childList: true, subtree: true });
 })();
-/* END_HEBREW_BIDI_FIX */
+/* END_RTL_BIDI_FIX */
 `;
 
 /**
@@ -341,8 +341,8 @@ async function cmdStatus() {
   }
 
   const summary = patchedCount > 0
-    ? `Hebrew BiDi fix is ENABLED for ${patchedCount}/${files.length} installation(s)`
-    : `Hebrew BiDi fix is DISABLED for all installations`;
+    ? `RTL text fix is ENABLED for ${patchedCount}/${files.length} installation(s)`
+    : `RTL text fix is DISABLED for all installations`;
 
   vscode.window.showInformationMessage(
     `${summary}\n\n${statusLines.join('\n')}`,
@@ -350,7 +350,7 @@ async function cmdStatus() {
   );
 
   // Also log to output channel
-  const channel = vscode.window.createOutputChannel('Claude Code Hebrew BiDi');
+  const channel = vscode.window.createOutputChannel('Claude Code RTL Fix');
   channel.appendLine(summary);
   channel.appendLine('');
   statusLines.forEach(line => channel.appendLine(line));
@@ -364,36 +364,40 @@ async function cmdStatus() {
  * Extension activation
  */
 function activate(context) {
-  console.log('Claude Code Hebrew BiDi extension is now active');
+  console.log('Claude Code RTL Fix extension is now active');
 
   // Create status bar item
   statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
-  statusBarItem.command = 'claude-code-hebrew-bidi.toggle';
+  statusBarItem.command = 'claude-code-rtl-fix.toggle';
   context.subscriptions.push(statusBarItem);
 
   // Register commands
   context.subscriptions.push(
-    vscode.commands.registerCommand('claude-code-hebrew-bidi.enable', cmdEnable)
+    vscode.commands.registerCommand('claude-code-rtl-fix.enable', cmdEnable)
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand('claude-code-hebrew-bidi.disable', cmdDisable)
+    vscode.commands.registerCommand('claude-code-rtl-fix.disable', cmdDisable)
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand('claude-code-hebrew-bidi.status', cmdStatus)
+    vscode.commands.registerCommand('claude-code-rtl-fix.status', cmdStatus)
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand('claude-code-hebrew-bidi.toggle', cmdToggle)
+    vscode.commands.registerCommand('claude-code-rtl-fix.toggle', cmdToggle)
   );
 
   // Update status bar on activation (reflects actual file state)
   updateStatusBar();
 
-  // Auto-enable if configured
-  const config = vscode.workspace.getConfiguration('claude-code-hebrew-bidi');
-  if (config.get('autoEnable')) {
+  // Check if this is first-time activation
+  const config = vscode.workspace.getConfiguration('claude-code-rtl-fix');
+  const hasRunBefore = context.globalState.get('hasRunBefore', false);
+
+  // Auto-enable on first install OR if configured
+  if (!hasRunBefore || config.get('autoEnable')) {
+    context.globalState.update('hasRunBefore', true);
     cmdEnable();
   }
 }

@@ -106,7 +106,7 @@ Or via `settings.json`:
 
 ```json
 {
-  "claude-code-hebrew-bidi.autoEnable": true
+  "claude-code-rtl-fix.autoEnable": true
 }
 ```
 
@@ -147,7 +147,7 @@ The extension modifies Claude Code's webview at runtime by applying a minimal, t
 (including nested elements such as `p`, `span`, `li`)
 
 **Patch marker:**
-`/* HEBREW_BIDI_FIX */`
+`/* RTL_BIDI_FIX */`
 
 **Backup suffix:**
 `.bidi-backup`

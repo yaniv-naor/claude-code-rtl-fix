@@ -40,22 +40,22 @@
   "contributes": {
     "commands": [
       {
-        "command": "claude-code-hebrew-bidi.enable",
+        "command": "claude-code-rtl-fix.enable",
         "title": "Enable RTL Text Fix",
         "category": "Claude Code"
       },
       {
-        "command": "claude-code-hebrew-bidi.disable",
+        "command": "claude-code-rtl-fix.disable",
         "title": "Disable RTL Text Fix",
         "category": "Claude Code"
       },
       {
-        "command": "claude-code-hebrew-bidi.status",
+        "command": "claude-code-rtl-fix.status",
         "title": "Check RTL Text Fix Status",
         "category": "Claude Code"
       },
       {
-        "command": "claude-code-hebrew-bidi.toggle",
+        "command": "claude-code-rtl-fix.toggle",
         "title": "Toggle RTL Text Fix",
         "category": "Claude Code"
       }
@@ -63,7 +63,7 @@
     "configuration": {
       "title": "Claude Code RTL Fix",
       "properties": {
-        "claude-code-hebrew-bidi.autoEnable": {
+        "claude-code-rtl-fix.autoEnable": {
           "type": "boolean",
           "default": false,
           "description": "Automatically enable RTL text fix on VS Code startup"

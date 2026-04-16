@@ -1,5 +1,5 @@
 /**
- * Simple tests for Hebrew BiDi extension
+ * Simple tests for RTL BiDi extension
  * Run with: node test.js
  */
 
@@ -8,7 +8,7 @@ const path = require('path');
 const os = require('os');
 
 const BACKUP_SUFFIX = '.bidi-backup';
-const PATCH_MARKER = '/* HEBREW_BIDI_FIX */';
+const PATCH_MARKER = '/* RTL_BIDI_FIX */';
 const SAMPLE_JS = 'console.log("hello");';
 
 // Import functions from extension.js
@@ -51,15 +51,15 @@ assert(fs.existsSync('./LICENSE'), 'LICENSE exists');
 console.log('\n--- Package.json Tests ---');
 try {
   const pkg = JSON.parse(fs.readFileSync('./package.json', 'utf-8'));
-  assert(pkg.name === 'claude-code-hebrew-bidi', 'package name correct');
+  assert(pkg.name === 'claude-code-rtl-fix', 'package name correct');
   assert(pkg.main === './extension.js', 'main entry point correct');
   assert(pkg.contributes && pkg.contributes.commands, 'commands defined');
   assert(pkg.contributes.commands.length === 3, 'three commands registered');
 
   const commands = pkg.contributes.commands.map(c => c.command);
-  assert(commands.includes('claude-code-hebrew-bidi.enable'), 'enable command exists');
-  assert(commands.includes('claude-code-hebrew-bidi.disable'), 'disable command exists');
-  assert(commands.includes('claude-code-hebrew-bidi.status'), 'status command exists');
+  assert(commands.includes('claude-code-rtl-fix.enable'), 'enable command exists');
+  assert(commands.includes('claude-code-rtl-fix.disable'), 'disable command exists');
+  assert(commands.includes('claude-code-rtl-fix.status'), 'status command exists');
 } catch (error) {
   failed++;
   console.log(`  ✗ FAIL: package.json parsing: ${error.message}`);
@@ -85,7 +85,7 @@ const patchStart = extCode.indexOf('const BIDI_JS_PATCH = `');
 const patchEnd = extCode.indexOf('`;', patchStart);
 const patchContent = extCode.substring(patchStart, patchEnd);
 
-assert(patchContent.includes('HEBREW_BIDI_FIX'), 'patch has marker');
+assert(patchContent.includes('RTL_BIDI_FIX'), 'patch has marker');
 assert(patchContent.includes('message_'), 'patch targets message elements');
 assert(patchContent.includes('content_xGDvVg'), 'patch targets content elements');
 assert(patchContent.includes('root_-a7MRw'), 'patch targets root elements');
