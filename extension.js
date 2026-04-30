@@ -391,13 +391,17 @@ function activate(context) {
   // Update status bar on activation (reflects actual file state)
   updateStatusBar();
 
-  // Check if this is first-time activation
+  // Auto-enable if patch is missing
+  const files = findJsFiles();
+  const patchedCount = files.filter(f => isPatched(f)).length;
   const config = vscode.workspace.getConfiguration('claude-code-rtl-fix');
-  const hasRunBefore = context.globalState.get('hasRunBefore', false);
 
-  // Auto-enable on first install OR if configured
-  if (!hasRunBefore || config.get('autoEnable')) {
-    context.globalState.update('hasRunBefore', true);
+  // If Claude Code exists but no patch found → auto-enable
+  if (files.length > 0 && patchedCount === 0) {
+    cmdEnable();
+  }
+  // Or if autoEnable is configured
+  else if (config.get('autoEnable')) {
     cmdEnable();
   }
 }
