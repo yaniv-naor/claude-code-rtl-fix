@@ -2,7 +2,7 @@
   "name": "claude-code-rtl-fix",
   "displayName": "Claude Code RTL Fix",
   "description": "Enables right-to-left text rendering in Claude Code for Hebrew, Arabic, Farsi, Urdu, and other RTL languages. Smart direction detection without affecting LTR text.",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "publisher": "yaniv-naor",
   "engines": {
     "vscode": "^1.80.0"
