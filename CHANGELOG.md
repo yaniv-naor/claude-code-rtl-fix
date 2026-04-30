@@ -30,9 +30,14 @@ All notable changes to the "Claude Code RTL Fix" extension will be documented in
 - Full reversibility with restore functionality
 - Visual status indicator: ✓ (enabled) or ⊘ (disabled)
 
+## [1.0.4] - 2026-04-30
+
+### Improved
+- Added heading support (h1-h6) for correct RTL/LTR direction detection
+- Headings now use `dir="auto"` for intelligent direction detection per heading
+
 ## [Unreleased]
 
 ### Planned
-- Marketplace publication
 - Automated tests
 - Configuration UI improvements

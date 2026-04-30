@@ -24,7 +24,8 @@ const BIDI_JS_PATCH = `
     '[class*="root_-a7MRw"] span',
     '[class*="root_-a7MRw"] li',
     '[class*="content_xGDvVg"] p',
-    '[class*="content_xGDvVg"] span'
+    '[class*="content_xGDvVg"] span',
+    'h1', 'h2', 'h3', 'h4', 'h5', 'h6'
   ].join(',');
 
   function applyBidi() {
@@ -36,12 +37,8 @@ const BIDI_JS_PATCH = `
     });
   }
 
-  // Apply immediately
   applyBidi();
-
-  // Watch for new messages
-  var observer = new MutationObserver(applyBidi);
-  observer.observe(document.body, { childList: true, subtree: true });
+  new MutationObserver(applyBidi).observe(document.body, { childList: true, subtree: true });
 })();
 /* END_RTL_BIDI_FIX */
 `;
