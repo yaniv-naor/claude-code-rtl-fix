@@ -9,6 +9,9 @@ const PATCH_MARKER = '/* RTL_BIDI_FIX */';
 // Status bar item
 let statusBarItem;
 
+// Extension context (for globalState access)
+let extensionContext;
+
 // JavaScript snippet injected at the end of index.js
 const BIDI_JS_PATCH = `
 /* RTL_BIDI_FIX */
@@ -241,6 +244,10 @@ async function cmdEnable() {
 
   // Show results
   if (patchedCount > 0 || alreadyPatchedCount > 0) {
+    if (extensionContext) {
+      await extensionContext.globalState.update('userWantsEnabled', true);
+    }
+
     if (patchedCount > 0) {
       const action = await vscode.window.showInformationMessage(
         `✅ Right-to-left text fix applied.\nReload VS Code to activate.`,
@@ -293,6 +300,10 @@ async function cmdDisable() {
 
   // Show results
   if (restoredCount > 0 || nothingToRestoreCount > 0) {
+    if (extensionContext) {
+      await extensionContext.globalState.update('userWantsEnabled', false);
+    }
+
     if (restoredCount > 0) {
       const action = await vscode.window.showInformationMessage(
         `✅ Right-to-left text fix removed.\nReload VS Code to complete.`,
@@ -363,6 +374,8 @@ async function cmdStatus() {
 function activate(context) {
   console.log('Claude Code RTL Fix extension is now active');
 
+  extensionContext = context;
+
   // Create status bar item
   statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
   statusBarItem.command = 'claude-code-rtl-fix.toggle';
@@ -388,18 +401,19 @@ function activate(context) {
   // Update status bar on activation (reflects actual file state)
   updateStatusBar();
 
-  // Auto-enable if patch is missing
   const files = findJsFiles();
   const patchedCount = files.filter(f => isPatched(f)).length;
-  const config = vscode.workspace.getConfiguration('claude-code-rtl-fix');
+  const userWantsEnabled = context.globalState.get('userWantsEnabled');
 
-  // If Claude Code exists but no patch found → auto-enable
-  if (files.length > 0 && patchedCount === 0) {
-    cmdEnable();
-  }
-  // Or if autoEnable is configured
-  else if (config.get('autoEnable')) {
-    cmdEnable();
+  if (files.length > 0) {
+    if (userWantsEnabled === undefined) {
+      // First install — auto-enable and save preference
+      cmdEnable();
+    } else if (userWantsEnabled === true && patchedCount === 0) {
+      // User wants it enabled but patch is missing (e.g. Claude Code updated) — silently re-apply
+      cmdEnable();
+    }
+    // userWantsEnabled === false → user disabled intentionally, do nothing
   }
 }
 

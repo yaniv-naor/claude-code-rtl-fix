@@ -36,8 +36,15 @@ All notable changes to the "Claude Code RTL Fix" extension will be documented in
 - Added heading support (h1-h6) for correct RTL/LTR direction detection
 - Headings now use `dir="auto"` for intelligent direction detection per heading
 
+## [1.0.5] - 2026-05-14
+
+### Fixed
+- Extension no longer auto-enables itself after VSCode restart when user intentionally disabled it
+- User preference (enabled/disabled) is now persisted via `globalState` across sessions
+- Fixed race condition where `globalState` could be written after window reload, causing stale state on next activation
+- If Claude Code updates and replaces its files, the patch is silently re-applied only if the user had previously enabled the fix
+
 ## [Unreleased]
 
 ### Planned
-- Automated tests
 - Configuration UI improvements

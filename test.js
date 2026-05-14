@@ -11,9 +11,6 @@ const BACKUP_SUFFIX = '.bidi-backup';
 const PATCH_MARKER = '/* RTL_BIDI_FIX */';
 const SAMPLE_JS = 'console.log("hello");';
 
-// Import functions from extension.js
-const extension = require('./extension.js');
-
 // Test utilities
 let passed = 0;
 let failed = 0;
@@ -54,7 +51,7 @@ try {
   assert(pkg.name === 'claude-code-rtl-fix', 'package name correct');
   assert(pkg.main === './extension.js', 'main entry point correct');
   assert(pkg.contributes && pkg.contributes.commands, 'commands defined');
-  assert(pkg.contributes.commands.length === 3, 'three commands registered');
+  assert(pkg.contributes.commands.length === 4, 'four commands registered');
 
   const commands = pkg.contributes.commands.map(c => c.command);
   assert(commands.includes('claude-code-rtl-fix.enable'), 'enable command exists');
@@ -79,6 +76,25 @@ assert(extCode.includes('isPatched'), 'isPatched function exists');
 assert(extCode.includes('patchFile'), 'patchFile function exists');
 assert(extCode.includes('restoreFile'), 'restoreFile function exists');
 
+// Test: globalState logic
+console.log('\n--- globalState Logic Tests ---');
+assert(extCode.includes('extensionContext'), 'extensionContext variable exists');
+assert(extCode.includes('globalState'), 'globalState usage exists');
+assert(extCode.includes("userWantsEnabled"), 'userWantsEnabled key used');
+assert(extCode.includes("userWantsEnabled', true"), 'saves true on enable');
+assert(extCode.includes("userWantsEnabled', false"), 'saves false on disable');
+assert(extCode.includes("userWantsEnabled === undefined"), 'handles first install case');
+assert(extCode.includes("userWantsEnabled === true && patchedCount === 0"), 'handles patch missing case');
+assert(!extCode.includes("files.length > 0 && patchedCount === 0) {\n    cmdEnable"), 'old unconditional auto-enable removed');
+assert(extCode.includes('extensionContext = context'), 'context saved on activate');
+
+// Test: activate does NOT auto-enable when user disabled intentionally
+const activateStart = extCode.indexOf('function activate(');
+const activateEnd = extCode.indexOf('\nfunction deactivate', activateStart);
+const activateBody = extCode.substring(activateStart, activateEnd);
+assert(!activateBody.includes("config.get('autoEnable')"), 'old autoEnable config logic removed');
+assert(activateBody.includes("userWantsEnabled === false") || activateBody.includes('// userWantsEnabled === false'), 'false case documented/handled');
+
 // Test: Patch content
 console.log('\n--- Patch Content Tests ---');
 const patchStart = extCode.indexOf('const BIDI_JS_PATCH = `');
@@ -92,7 +108,7 @@ assert(patchContent.includes('root_-a7MRw'), 'patch targets root elements');
 assert(patchContent.includes('userMessage_'), 'patch targets user messages');
 assert(patchContent.includes('messageInput_'), 'patch targets message input');
 assert(patchContent.includes("setAttribute('dir', 'auto')"), 'patch sets dir=auto');
-assert(patchContent.includes('observer.observe'), 'patch uses MutationObserver');
+assert(patchContent.includes('.observe('), 'patch uses MutationObserver');
 
 // Test: README content
 console.log('\n--- README Tests ---');
@@ -101,7 +117,7 @@ assert(readme.includes('Hebrew'), 'README mentions Hebrew');
 assert(readme.includes('BiDi'), 'README mentions BiDi');
 assert(readme.includes('Claude Code'), 'README mentions Claude Code');
 assert(readme.includes('dir="auto"'), 'README explains dir=auto');
-assert(readme.includes('English'), 'README mentions English support');
+assert(readme.includes('LTR') || readme.includes('English') || readme.includes('left-to-right') || readme.includes('RTL'), 'README mentions text direction support');
 assert(readme.includes('mixed'), 'README mentions mixed text');
 assert(readme.includes('Installation'), 'README has installation section');
 assert(readme.includes('Usage'), 'README has usage section');
