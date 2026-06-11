@@ -151,7 +151,8 @@ function restoreFile(filePath) {
 }
 
 /**
- * Update status bar item based on current state
+ * Update status bar item based on globalState (source of truth for user intent).
+ * Falls back to file state only when globalState is not yet set.
  */
 function updateStatusBar() {
   if (!statusBarItem) return;
@@ -162,8 +163,14 @@ function updateStatusBar() {
     return;
   }
 
-  const patchedCount = files.filter(f => isPatched(f)).length;
-  const isEnabled = patchedCount > 0;
+  const userWantsEnabled = extensionContext
+    ? extensionContext.globalState.get('userWantsEnabled')
+    : undefined;
+
+  // globalState is the source of truth; only fall back to file state on first install
+  const isEnabled = userWantsEnabled !== undefined
+    ? userWantsEnabled
+    : files.some(f => isPatched(f));
 
   if (isEnabled) {
     statusBarItem.text = '$(check) Claude RTL';
@@ -181,7 +188,8 @@ function updateStatusBar() {
 }
 
 /**
- * Toggle BiDi fix (for status bar click)
+ * Toggle BiDi fix (for status bar click).
+ * Determines state from globalState (the source of truth), not file state.
  */
 async function cmdToggle() {
   const files = findJsFiles();
@@ -190,41 +198,28 @@ async function cmdToggle() {
     return;
   }
 
-  // Check current state BEFORE any changes
-  const patchedCountBefore = files.filter(f => isPatched(f)).length;
-  const wasEnabled = patchedCountBefore > 0;
+  const userWantsEnabled = extensionContext
+    ? extensionContext.globalState.get('userWantsEnabled')
+    : null;
 
-  // Update UI immediately BEFORE calling cmdEnable/Disable
-  if (wasEnabled) {
-    // Update to disabled state
-    statusBarItem.text = '$(circle-slash) Claude RTL';
-    statusBarItem.tooltip = 'Claude Code: Right-to-left text fix inactive (Click to enable)';
-    statusBarItem.backgroundColor = undefined;
-    statusBarItem.color = undefined;
+  // Use globalState as source of truth; fall back to file state
+  const isCurrentlyEnabled = userWantsEnabled !== null && userWantsEnabled !== undefined
+    ? userWantsEnabled
+    : files.some(f => isPatched(f));
 
+  if (isCurrentlyEnabled) {
     await cmdDisable();
   } else {
-    // Update to enabled state
-    statusBarItem.text = '$(check) Claude RTL';
-    statusBarItem.tooltip = 'Claude Code: Right-to-left text fix active';
-    statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.prominentBackground');
-    statusBarItem.color = new vscode.ThemeColor('statusBarItem.prominentForeground');
-
     await cmdEnable();
   }
 }
 
 /**
- * Enable BiDi fix command
+ * Apply patches to all Claude Code files.
+ * Returns { patchedCount, alreadyPatchedCount, errorCount, errors }
  */
-async function cmdEnable() {
+function applyPatches() {
   const files = findJsFiles();
-
-  if (files.length === 0) {
-    vscode.window.showErrorMessage('Claude Code not found. Please install it first.');
-    return;
-  }
-
   let patchedCount = 0;
   let alreadyPatchedCount = 0;
   let errorCount = 0;
@@ -242,22 +237,41 @@ async function cmdEnable() {
     }
   }
 
-  // Show results
-  if (patchedCount > 0 || alreadyPatchedCount > 0) {
-    if (extensionContext) {
-      await extensionContext.globalState.update('userWantsEnabled', true);
-    }
+  return { patchedCount, alreadyPatchedCount, errorCount, errors, totalFiles: files.length };
+}
 
+/**
+ * Enable BiDi fix command (user-initiated)
+ */
+async function cmdEnable() {
+  const files = findJsFiles();
+
+  if (files.length === 0) {
+    vscode.window.showErrorMessage('Claude Code not found. Please install it first.');
+    return;
+  }
+
+  // Save preference FIRST, before doing anything else
+  if (extensionContext) {
+    await extensionContext.globalState.update('userWantsEnabled', true);
+  }
+
+  const { patchedCount, alreadyPatchedCount, errorCount, errors } = applyPatches();
+
+  // Update status bar IMMEDIATELY, before any popup
+  updateStatusBar();
+
+  if (patchedCount > 0 || alreadyPatchedCount > 0) {
     if (patchedCount > 0) {
-      const action = await vscode.window.showInformationMessage(
+      vscode.window.showInformationMessage(
         `✅ Right-to-left text fix applied.\nReload VS Code to activate.`,
         'Reload Now',
         'Later'
-      );
-
-      if (action === 'Reload Now') {
-        vscode.commands.executeCommand('workbench.action.reloadWindow');
-      }
+      ).then(action => {
+        if (action === 'Reload Now') {
+          vscode.commands.executeCommand('workbench.action.reloadWindow');
+        }
+      });
     } else {
       vscode.window.showInformationMessage(`Already active.`);
     }
@@ -271,7 +285,7 @@ async function cmdEnable() {
 }
 
 /**
- * Disable BiDi fix command
+ * Disable BiDi fix command (user-initiated)
  */
 async function cmdDisable() {
   const files = findJsFiles();
@@ -279,6 +293,11 @@ async function cmdDisable() {
   if (files.length === 0) {
     vscode.window.showErrorMessage('Claude Code not found.');
     return;
+  }
+
+  // Save preference FIRST, before doing anything else
+  if (extensionContext) {
+    await extensionContext.globalState.update('userWantsEnabled', false);
   }
 
   let restoredCount = 0;
@@ -298,22 +317,20 @@ async function cmdDisable() {
     }
   }
 
-  // Show results
-  if (restoredCount > 0 || nothingToRestoreCount > 0) {
-    if (extensionContext) {
-      await extensionContext.globalState.update('userWantsEnabled', false);
-    }
+  // Update status bar IMMEDIATELY, before any popup
+  updateStatusBar();
 
+  if (restoredCount > 0 || nothingToRestoreCount > 0) {
     if (restoredCount > 0) {
-      const action = await vscode.window.showInformationMessage(
+      vscode.window.showInformationMessage(
         `✅ Right-to-left text fix removed.\nReload VS Code to complete.`,
         'Reload Now',
         'Later'
-      );
-
-      if (action === 'Reload Now') {
-        vscode.commands.executeCommand('workbench.action.reloadWindow');
-      }
+      ).then(action => {
+        if (action === 'Reload Now') {
+          vscode.commands.executeCommand('workbench.action.reloadWindow');
+        }
+      });
     } else {
       vscode.window.showInformationMessage(`Already inactive.`);
     }
@@ -369,9 +386,31 @@ async function cmdStatus() {
 }
 
 /**
+ * Silently apply patches without user interaction.
+ * Used during auto-enable on activation (first install or Claude Code update).
+ */
+async function silentEnable(context) {
+  await context.globalState.update('userWantsEnabled', true);
+  const { patchedCount, errorCount } = applyPatches();
+
+  if (patchedCount > 0) {
+    vscode.window.showInformationMessage(
+      '✅ RTL fix applied automatically. Reload VS Code to activate.',
+      'Reload Now'
+    ).then(action => {
+      if (action === 'Reload Now') {
+        vscode.commands.executeCommand('workbench.action.reloadWindow');
+      }
+    });
+  }
+
+  updateStatusBar();
+}
+
+/**
  * Extension activation
  */
-function activate(context) {
+async function activate(context) {
   console.log('Claude Code RTL Fix extension is now active');
 
   extensionContext = context;
@@ -383,37 +422,34 @@ function activate(context) {
 
   // Register commands
   context.subscriptions.push(
-    vscode.commands.registerCommand('claude-code-rtl-fix.enable', cmdEnable)
-  );
-
-  context.subscriptions.push(
-    vscode.commands.registerCommand('claude-code-rtl-fix.disable', cmdDisable)
-  );
-
-  context.subscriptions.push(
-    vscode.commands.registerCommand('claude-code-rtl-fix.status', cmdStatus)
-  );
-
-  context.subscriptions.push(
+    vscode.commands.registerCommand('claude-code-rtl-fix.enable', cmdEnable),
+    vscode.commands.registerCommand('claude-code-rtl-fix.disable', cmdDisable),
+    vscode.commands.registerCommand('claude-code-rtl-fix.status', cmdStatus),
     vscode.commands.registerCommand('claude-code-rtl-fix.toggle', cmdToggle)
   );
 
-  // Update status bar on activation (reflects actual file state)
-  updateStatusBar();
-
   const files = findJsFiles();
-  const patchedCount = files.filter(f => isPatched(f)).length;
-  const userWantsEnabled = context.globalState.get('userWantsEnabled');
+  if (files.length === 0) {
+    statusBarItem.hide();
+    return;
+  }
 
-  if (files.length > 0) {
-    if (userWantsEnabled === undefined) {
-      // First install — auto-enable and save preference
-      cmdEnable();
-    } else if (userWantsEnabled === true && patchedCount === 0) {
-      // User wants it enabled but patch is missing (e.g. Claude Code updated) — silently re-apply
-      cmdEnable();
-    }
-    // userWantsEnabled === false → user disabled intentionally, do nothing
+  const userWantsEnabled = context.globalState.get('userWantsEnabled');
+  const patchedCount = files.filter(f => isPatched(f)).length;
+
+  if (userWantsEnabled === undefined) {
+    // First install — auto-enable and persist preference
+    await silentEnable(context);
+  } else if (userWantsEnabled === true && patchedCount === 0) {
+    // User wants enabled but patch is gone (Claude Code updated) — re-apply silently
+    applyPatches();
+    updateStatusBar();
+  } else if (userWantsEnabled === true && patchedCount > 0) {
+    // Everything is in order — just update UI
+    updateStatusBar();
+  } else {
+    // userWantsEnabled === false — respect user's choice
+    updateStatusBar();
   }
 }
 
