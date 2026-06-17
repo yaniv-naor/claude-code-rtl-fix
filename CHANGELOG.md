@@ -44,6 +44,23 @@ All notable changes to the "Claude Code RTL Fix" extension will be documented in
 - Fixed race condition where `globalState` could be written after window reload, causing stale state on next activation
 - If Claude Code updates and replaces its files, the patch is silently re-applied only if the user had previously enabled the fix
 
+## [1.0.7] - 2026-06-17
+
+### Improved
+- Replaced `dir="auto"` with active RTL detection logic — if any RTL character (Hebrew, Arabic, Farsi, etc.) is present in the text, the entire block is aligned right
+- Pure LTR text correctly remains left-aligned
+- Mixed text (RTL + LTR) now always aligns to the right as expected
+- Added broader selector coverage for Claude Code UI elements (dialogs, options, labels, descriptions, chips)
+- Code blocks (`pre`, `code`) are now always forced LTR regardless of content
+- Lists (`ol`, `ul`) receive RTL direction when any child item contains RTL text
+- Input field direction updates dynamically as user types
+- Added support for emojis and symbols followed by RTL text
+
+### Fixed
+- Text starting with numbers, symbols, or English followed by Hebrew was incorrectly left-aligned
+- Numbered lists had markers on the left side even when content was in Hebrew/Arabic
+- Claude Code question/option dialogs were not receiving correct text direction
+
 ## [Unreleased]
 
 ### Planned

@@ -16,32 +16,89 @@ let extensionContext;
 const BIDI_JS_PATCH = `
 /* RTL_BIDI_FIX */
 ;(function(){
-  var SELECTORS = [
+  var RTL_REGEX = /[֐-׿؀-ۿ܀-ݏﭐ-﷿ﹰ-﻿]/;
+
+  var BLOCK_SELECTORS = [
     '[class*="message_"]',
-    '[class*="content_xGDvVg"]',
-    '[class*="root_-a7MRw"]',
+    '[class*="content_"]',
+    '[class*="root_"]',
     '[class*="userMessage_"]',
     '[class*="messageInput_"]',
     '[class*="messageInputContainer_"]',
-    '[class*="root_-a7MRw"] p',
-    '[class*="root_-a7MRw"] span',
-    '[class*="root_-a7MRw"] li',
-    '[class*="content_xGDvVg"] p',
-    '[class*="content_xGDvVg"] span',
-    'h1', 'h2', 'h3', 'h4', 'h5', 'h6'
+    '[class*="root_"] p',
+    '[class*="root_"] li',
+    '[class*="content_"] p',
+    '[class*="question"]',
+    '[class*="option"]',
+    '[class*="label"]',
+    '[class*="description"]',
+    '[class*="header"]',
+    '[class*="title"]',
+    '[class*="text"]',
+    '[class*="dialog"]',
+    '[class*="modal"]',
+    '[class*="popup"]',
+    '[class*="chip"]',
+    '[class*="badge"]',
+    '[class*="select"]',
+    '[class*="radio"]',
+    '[class*="choice"]',
+    'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+    'p', 'span', 'div', 'li', 'td', 'th', 'summary', 'details'
   ].join(',');
 
+  function getDir(text) {
+    return RTL_REGEX.test(text || '') ? 'rtl' : 'ltr';
+  }
+
+  function setDir(el, dir) {
+    if (el.getAttribute('dir') !== dir) {
+      el.setAttribute('dir', dir);
+      el.style.direction = dir;
+      el.style.textAlign = dir === 'rtl' ? 'right' : 'left';
+    }
+  }
+
   function applyBidi() {
-    document.querySelectorAll(SELECTORS).forEach(function(el) {
-      if (el.getAttribute('dir') !== 'auto') {
-        el.setAttribute('dir', 'auto');
-        el.style.direction = 'auto';
-      }
+    document.querySelectorAll('pre, code').forEach(function(el) {
+      setDir(el, 'ltr');
+    });
+
+    document.querySelectorAll(BLOCK_SELECTORS).forEach(function(el) {
+      if (el.closest('pre') || el.closest('code')) return;
+      var dir = getDir(el.textContent);
+      setDir(el, dir);
+    });
+
+    document.querySelectorAll('ol, ul').forEach(function(list) {
+      if (list.closest('pre') || list.closest('code')) return;
+      var hasRtl = false;
+      list.querySelectorAll(':scope > li').forEach(function(li) {
+        var dir = getDir(li.textContent);
+        setDir(li, dir);
+        if (dir === 'rtl') hasRtl = true;
+      });
+      var listDir = hasRtl ? 'rtl' : 'ltr';
+      list.setAttribute('dir', listDir);
+      list.style.direction = listDir;
+    });
+
+    document.querySelectorAll('[class*="messageInput_"], [class*="Input_"], textarea, [contenteditable]').forEach(function(el) {
+      if (el.closest('pre') || el.closest('code')) return;
+      var dir = getDir(el.textContent || el.value || '');
+      setDir(el, dir);
     });
   }
 
   applyBidi();
   new MutationObserver(applyBidi).observe(document.body, { childList: true, subtree: true });
+  document.addEventListener('input', function(e) {
+    var el = e.target;
+    var dir = getDir(el.textContent || el.value || '');
+    el.setAttribute('dir', dir);
+    el.style.direction = dir;
+    el.style.textAlign = dir === 'rtl' ? 'right' : 'left';
+  }, true);
 })();
 /* END_RTL_BIDI_FIX */
 `;
