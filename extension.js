@@ -95,9 +95,17 @@ const BIDI_JS_PATCH = `
   document.addEventListener('input', function(e) {
     var el = e.target;
     var dir = getDir(el.textContent || el.value || '');
-    el.setAttribute('dir', dir);
-    el.style.direction = dir;
-    el.style.textAlign = dir === 'rtl' ? 'right' : 'left';
+    setDir(el, dir);
+    var mirror = el.nextElementSibling;
+    if (mirror && mirror.getAttribute('aria-hidden') === 'true') {
+      setDir(mirror, dir);
+    } else {
+      var container = el.closest('[class*="messageInputContainer_"]');
+      if (container) {
+        var m = container.querySelector('[class*="mentionMirror_"]');
+        if (m) setDir(m, dir);
+      }
+    }
   }, true);
 })();
 /* END_RTL_BIDI_FIX */
