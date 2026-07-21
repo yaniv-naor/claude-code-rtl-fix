@@ -13,3 +13,5 @@ node_modules/**
 test.js
 MARKETPLACE-SETUP.md
 **/*.bidi-backup
+BUGS-ANALYSIS.md
+RTL-TEST-CASES.md
