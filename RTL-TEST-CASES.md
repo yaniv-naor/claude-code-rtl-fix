@@ -7,6 +7,7 @@
 כשמבקשים "תריץ בדיקות" או "בדיקות RTL":
 1. הצג את כל הטקסטים מסעיפים 1-10 בתשובה אחת כדי שהמשתמש יבדוק את ה-output ויזואלית
 2. לאחר מכן, בקש מהמשתמש לבצע את בדיקות ה-input מסעיף 11 ידנית בשדה הצ'אט
+3. הצג את שאלות סעיף 12 אחת אחרי השנייה דרך ממשק AskUserQuestion כדי לבדוק יישור בחלון השאלות
 
 ---
 
@@ -391,6 +392,55 @@ URL: https://example.com - אתר הייצור
 
 ---
 
+## 12. בדיקות ממשק שאלות (AskUserQuestion)
+
+כשמריצים בדיקות, יש להציג למשתמש שאלות דרך ממשק ה-AskUserQuestion (חלון שאלות עם אפשרויות בחירה).
+המטרה: לבדוק שה-headers, labels, descriptions ו-questions מיושרים נכון.
+
+### הנחיות להרצה
+
+הצג את השאלות הבאות **אחת אחרי השנייה** (לא בבת אחת) כדי שהמשתמש יוכל לבדוק את היישור של כל אחת:
+
+### שאלה 1 — עברית בלבד
+
+- header: "בחירה"
+- question: "איזה גישה מתאימה לפרויקט שלך?"
+- options:
+  - label: "גישה ראשונה", description: "פתרון מהיר עם פחות גמישות לעתיד"
+  - label: "גישה שנייה", description: "פתרון מורכב יותר אבל עם תמיכה ארוכת טווח"
+  - label: "גישה שלישית", description: "פשרה בין מהירות לגמישות"
+
+### שאלה 2 — אנגלית בלבד
+
+- header: "Approach"
+- question: "Which testing strategy do you prefer?"
+- options:
+  - label: "Unit tests only", description: "Fast feedback loop, less integration coverage"
+  - label: "Integration tests", description: "Slower but catches real-world issues"
+  - label: "Both", description: "Maximum coverage at the cost of longer CI times"
+
+### שאלה 3 — משולב (header אנגלית, שאלה עברית)
+
+- header: "Config"
+- question: "איך להגדיר את ה-Authentication במערכת?"
+- options:
+  - label: "OAuth 2.0", description: "אימות מול שירות חיצוני כמו Google או GitHub"
+  - label: "JWT Tokens", description: "טוקנים עצמאיים בלי תלות בשרת חיצוני"
+  - label: "Session-based", description: "גישה מסורתית עם cookies וסשן בצד שרת"
+
+### שאלה 4 — משולב (header עברית, שאלה מעורבת, multiSelect)
+
+- header: "תכונות"
+- question: "אילו features חדשים לכלול בגרסה הבאה?"
+- multiSelect: true
+- options:
+  - label: "Dark Mode", description: "תמיכה במצב כהה לכל ה-UI"
+  - label: "ייצוא PDF", description: "אפשרות Export לפורמט PDF"
+  - label: "התראות Push", description: "Real-time notifications למשתמש"
+  - label: "חיפוש מתקדם", description: "Full-text search עם filters"
+
+---
+
 ## צ'קליסט בדיקה
 
 ### Output (הודעות שהתקבלו מ-Claude)
@@ -416,3 +466,10 @@ URL: https://example.com - אתר הייצור
 - [ ] מחיקה + כתיבה מחדש — כיוון מתעדכן
 - [ ] Paste עובד נכון
 - [ ] טקסט ארוך עם גלילה — כיוון נשמר
+
+### ממשק שאלות (AskUserQuestion)
+
+- [ ] שאלה בעברית — question, labels, descriptions מיושרים ימינה
+- [ ] שאלה באנגלית — question, labels, descriptions מיושרים שמאלה
+- [ ] שאלה מעורבת — header באנגלית + שאלה בעברית מוצגים נכון
+- [ ] multiSelect עם טקסט מעורב — כל האפשרויות קריאות

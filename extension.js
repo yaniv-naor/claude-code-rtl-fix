@@ -518,9 +518,17 @@ async function activate(context) {
     // First install — auto-enable and persist preference
     await silentEnable(context);
   } else if (userWantsEnabled === true && patchedCount === 0) {
-    // User wants enabled but patch is gone (Claude Code updated) — re-apply silently
+    // User wants enabled but patch is gone (Claude Code updated) — re-apply and prompt reload
     applyPatches();
     updateStatusBar();
+    vscode.window.showWarningMessage(
+      '🔄 Claude Code updated — RTL fix re-applied. Reload required to activate.',
+      'Reload Now'
+    ).then(action => {
+      if (action === 'Reload Now') {
+        vscode.commands.executeCommand('workbench.action.reloadWindow');
+      }
+    });
   } else if (userWantsEnabled === true && patchedCount > 0) {
     // Everything is in order — just update UI
     updateStatusBar();
