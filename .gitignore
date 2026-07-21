@@ -5,3 +5,5 @@ node_modules
 .sfdx/
 inject-patch.sh
 UsersNaor*
+BUGS-ANALYSIS.md
+RTL-TEST-CASES.md
