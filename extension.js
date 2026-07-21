@@ -66,26 +66,38 @@ const BIDI_JS_PATCH = `
 
     document.querySelectorAll(BLOCK_SELECTORS).forEach(function(el) {
       if (el.closest('pre') || el.closest('code')) return;
-      var dir = getDir(el.textContent);
+      if (el.tagName === 'LI' || el.tagName === 'OL' || el.tagName === 'UL') return;
+      var text = el.textContent;
+      if (!text.trim() && el.matches('[contenteditable], [class*="messageInput_"], [class*="mentionMirror_"]')) {
+        setDir(el, 'rtl');
+        return;
+      }
+      var dir = getDir(text);
       setDir(el, dir);
     });
 
     document.querySelectorAll('ol, ul').forEach(function(list) {
       if (list.closest('pre') || list.closest('code')) return;
-      var hasRtl = false;
+      list.style.paddingLeft = '2em';
+      list.style.paddingRight = '2em';
       list.querySelectorAll(':scope > li').forEach(function(li) {
         var dir = getDir(li.textContent);
-        setDir(li, dir);
-        if (dir === 'rtl') hasRtl = true;
+        if (li.getAttribute('dir') !== dir) {
+          li.setAttribute('dir', dir);
+          li.style.direction = dir;
+          li.style.textAlign = dir === 'rtl' ? 'right' : 'left';
+        }
       });
-      var listDir = hasRtl ? 'rtl' : 'ltr';
-      list.setAttribute('dir', listDir);
-      list.style.direction = listDir;
     });
 
     document.querySelectorAll('[class*="messageInput_"], [class*="Input_"], textarea, [contenteditable]').forEach(function(el) {
       if (el.closest('pre') || el.closest('code')) return;
-      var dir = getDir(el.textContent || el.value || '');
+      var text = el.textContent || el.value || '';
+      if (!text.trim()) {
+        setDir(el, 'rtl');
+        return;
+      }
+      var dir = getDir(text);
       setDir(el, dir);
     });
   }
